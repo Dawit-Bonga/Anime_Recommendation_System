@@ -1,0 +1,12 @@
+# Ignore python cache files
+__pycache__/
+*.pyc
+.venv/
+
+# Ignore massive data files (Too big for GitHub)
+data/
+*.csv
+
+# Optional: Ignore the model if it is >100MB
+# (If your .pkl is under 100MB, you can remove this line to share it)
+models/
