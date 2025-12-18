@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 import joblib
 import os
+import re
 from sklearn.metrics.pairwise import cosine_similarity
 
 # --- PATH CONFIGURATION ---
@@ -26,6 +27,32 @@ app.add_middleware(
 
 # Global dictionary to hold the loaded model in memory
 objects = {}
+
+
+def normalize_title(title):
+    """Remove season indicators to get base title."""
+    if not title:
+        return ""
+    
+    title_lower = title.lower()
+    patterns = [
+        r'\s*season\s+\d+',
+        r'\s*\d+\s*season',
+        r'\s*\d+nd\s*season',
+        r'\s*\d+rd\s*season',
+        r'\s*\d+th\s*season',
+        r'\s*final\s*season',
+        r'\s*part\s+\d+',
+        r'\s*\d+$',
+        r'\s*:\s*the\s+final\s+season',
+    ]
+    
+    normalized = title_lower
+    for pattern in patterns:
+        normalized = re.sub(pattern, '', normalized, flags=re.IGNORECASE)
+    
+    normalized = re.sub(r'\s+', ' ', normalized).strip()
+    return normalized
 
 
 @app.on_event("startup")
