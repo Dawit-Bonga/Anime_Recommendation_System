@@ -223,29 +223,70 @@ def recommend(anime_id: int):
     if anime_id not in objects.get("anime_id_to_idx", {}):
         raise HTTPException(status_code=404, detail="Anime ID not found")
     
+    # 1. Get the Input Title (so we can filter sequels)
+    input_meta = objects['metadata'].get(anime_id, {})
+    input_title = input_meta.get('title', "").lower()
+    input_base_title = normalize_title(input_title)
+    
+    # 2. Get Vector & Similarity Scores
     idx = objects['anime_id_to_idx'][anime_id]
     target_vector = objects['item_vectors'][idx].reshape(1, -1)
-    
     scores = cosine_similarity(target_vector, objects['item_vectors']).flatten()
     
-    top_indices = scores.argsort()[::-1][:11]
+    # 3. Get Top 50 candidates (We fetch more so we can throw away sequels)
+    top_indices = scores.argsort()[::-1][:50]
     
-    recommenddations = []
+    recommendations = []
+    seen_base_titles = {}  # Track: base_title -> (best_score, best_rec)
     
     for i in top_indices:
         rec_id = objects['idx_to_anime_id'][i]
+        
+        # Skip the input anime itself
         if rec_id == anime_id:
             continue
-        
+            
         meta = objects['metadata'].get(rec_id, {})
+        rec_title = meta.get('title', "").lower()
+        rec_base_title = normalize_title(rec_title)
         
-        recommenddations.append({
-            "id": int(rec_id),
-            "title": meta.get('title', f"Anime #{rec_id}"),
-            "genre": meta.get('genre', 'Unknown'),
-            "score": float(scores[i]),
-            "img_url": None #we will sort this out later
-        })
+        # --- FILTER 1: Skip sequels of the INPUT anime ---
+        # Check if it's a sequel of what the user searched for
+        if (input_title in rec_title or rec_title in input_title or 
+            input_base_title == rec_base_title):
+            continue
+        
+        # --- FILTER 2: Deduplicate other franchises' seasons ---
+        # If we've already seen this base title, keep only the best-scoring one
+        score = float(scores[i])
+        
+        if rec_base_title in seen_base_titles:
+            # Replace if this score is better
+            if score > seen_base_titles[rec_base_title][0]:
+                seen_base_titles[rec_base_title] = (score, {
+                    "id": int(rec_id),
+                    "title": meta.get('title', f"Anime #{rec_id}"),
+                    "genre": meta.get('genre', 'Unknown'),
+                    "score": score,
+                    "img_url": None
+                })
+            # Otherwise skip this duplicate
+            continue
+        else:
+            # New base title, add it
+            rec_data = {
+                "id": int(rec_id),
+                "title": meta.get('title', f"Anime #{rec_id}"),
+                "genre": meta.get('genre', 'Unknown'),
+                "score": score,
+                "img_url": None
+            }
+            seen_base_titles[rec_base_title] = (score, rec_data)
     
-    return {"recommendations": recommenddations}
+    # Convert to list and sort by score
+    recommendations = [rec for _, rec in seen_base_titles.values()]
+    recommendations.sort(key=lambda x: x['score'], reverse=True)
+    
+    # Return top 10
+    return {"recommendations": recommendations[:10]}
     
