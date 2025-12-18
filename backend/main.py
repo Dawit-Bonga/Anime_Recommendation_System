@@ -1,4 +1,4 @@
-from numpy.matlib import rec
+# from numpy.matlib import rec
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
@@ -42,49 +42,157 @@ def load_assets():
         print(f"Error: Model not found at {MODEL_PATH}")
     
     if os.path.exists(METADATA_PATH):
-        meta_df = pd.read_csv(METADATA_PATH, usecols=['ID', 'Title_Romaji', 'Genres'])
+        meta_df = pd.read_csv(METADATA_PATH, usecols=['ID', 'Title_Romaji', 'Title_English', 'Genres'])
         
-        #we are using the real japanese titles since a good amount of animes don't have translated names ,esp for this data base
+        # Use English title if available, otherwise fall back to Romaji (Japanese)
+        meta_df['title'] = meta_df['Title_English'].fillna(meta_df['Title_Romaji'])
+        meta_df['title_japanese'] = meta_df['Title_Romaji']
+        
         meta_df = meta_df.rename(columns={
             "ID": 'id',
-            'Title_Romaji': 'title', 
             'Genres': 'genre'
         })
         
         meta_df = meta_df.drop_duplicates(subset='id', keep='first')
         
+        # Store metadata with both English and Japanese titles accessible
         objects['metadata'] = meta_df.set_index('id').to_dict(orient='index')
         
-        objects['search_index'] = {str(r['title']).lower(): uid for uid, r in objects['metadata'].items()}
-        print("Metadata loaded")
-    else:
-        print(f"Error: MetaData not found at {METADATA_PATH}")
+        # Create search index: prioritize English titles, then Japanese
+        # English titles get priority in search
+        objects['search_index_english'] = {}
+        objects['search_index_japanese'] = {}
         
+        for uid, r in objects['metadata'].items():
+            # Get English title (may be NaN, so handle it)
+            english_title_raw = r.get('Title_English')
+            english_title = str(english_title_raw).lower().strip() if pd.notna(english_title_raw) else ''
+            
+            # Get Japanese title
+            japanese_title_raw = r.get('title_japanese')
+            japanese_title = str(japanese_title_raw).lower().strip() if pd.notna(japanese_title_raw) else ''
+            
+            # Add to search indices if valid
+            if english_title and english_title != 'nan' and english_title:
+                objects['search_index_english'][english_title] = uid
+            if japanese_title and japanese_title != 'nan' and japanese_title:
+                objects['search_index_japanese'][japanese_title] = uid
+        
+        print("Metadata loaded with English and Japanese search indices")
+    else:
+        raise FileNotFoundError(f"Metadata not found at {METADATA_PATH}")
+    
+    required_keys = ['model', 'anime_id_to_idx', 'idx_to_anime_id', 'metadata']
+    for key in required_keys:
+        if key not in objects:
+            raise ValueError(f"Failed to load required data: {key}")
+        
+    print("-----All assets loaded successfully-----")
 
 @app.get('/')
 def home():
     return {"status": "alive"}
 
 @app.get('/search')
-def search_anime(query:str):
+def search_anime(query: str, limit: int = 5):
     query = query.lower().strip()
-    results = []
+    if not query:
+        return {"results": []}
     
-    for title, uid in objects.get('search_index', {}).items():
-        if query in title:
-            meta = objects['metadata'][uid]
+    results = []
+    seen_ids = set()  # Track IDs to avoid duplicates
+    
+    # Step 1: Search English titles first (priority)
+    # Exact matches first, then partial matches
+    exact_matches = []
+    partial_matches = []
+    
+    for title, uid in objects.get('search_index_english', {}).items():
+        if uid in seen_ids:
+            continue
+        if title == query:
+            exact_matches.append((title, uid))
+        elif query in title:
+            partial_matches.append((title, uid))
+    
+    # Add exact matches first
+    for title, uid in exact_matches:
+        meta = objects['metadata'][uid]
+        if meta:
             results.append({
                 "id": uid,
                 "title": meta['title'],
                 "img_url": None
             })
-            if len(results) >=5:
-                break
+            seen_ids.add(uid)
+        if len(results) >= limit:
+            break
+    
+    # Then add partial matches
+    if len(results) < limit:
+        for title, uid in partial_matches:
+            if uid not in seen_ids:
+                meta = objects['metadata'][uid]
+                if meta:
+                    results.append({
+                        "id": uid,
+                        "title": meta['title'],
+                        "img_url": None
+                    })
+                    seen_ids.add(uid)
+                if len(results) >= limit:
+                    break
+    
+    # Step 2: If we don't have enough results, search Japanese titles
+    if len(results) < limit:
+        japanese_exact = []
+        japanese_partial = []
+        
+        for title, uid in objects.get('search_index_japanese', {}).items():
+            if uid in seen_ids:
+                continue
+            if title == query:
+                japanese_exact.append((title, uid))
+            elif query in title:
+                japanese_partial.append((title, uid))
+        
+        # Add exact Japanese matches
+        for title, uid in japanese_exact:
+            if uid not in seen_ids:
+                meta = objects['metadata'][uid]
+                if meta:
+                    results.append({
+                        "id": uid,
+                        "title": meta['title'],
+                        "img_url": None
+                    })
+                    seen_ids.add(uid)
+                if len(results) >= limit:
+                    break
+        
+        # Then partial Japanese matches
+        if len(results) < limit:
+            for title, uid in japanese_partial:
+                if uid not in seen_ids:
+                    meta = objects['metadata'][uid]
+                    if meta:
+                        results.append({
+                            "id": uid,
+                            "title": meta['title'],
+                            "img_url": None
+                        })
+                        seen_ids.add(uid)
+                    if len(results) >= limit:
+                        break
     
     return {"results": results}
 
 @app.get("/recommend/{anime_id}")
 def recommend(anime_id: int):
+    
+    if 'anime_id_to_idx' not in objects:
+        raise HTTPException(status_code=503, detail="Model not loaded")
+    
     if anime_id not in objects.get("anime_id_to_idx", {}):
         raise HTTPException(status_code=404, detail="Anime ID not found")
     
