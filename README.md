@@ -8,12 +8,12 @@ A full-stack anime recommendation system that lets you:
 
 Built with **FastAPI + React** on top of a **35M+ MyAnimeList ratings** dataset using **SVD collaborative filtering** and **TF‑IDF content-based filtering**.
 
-### 🎥 Demo
+<!-- ### 🎥 Demo
 
 - Add your demo link here: `https://your-demo-link.com`
 - Or a short video: `https://your-demo-video.com`
 
----
+--- -->
 
 ## 🛠 Tech Stack
 
@@ -70,7 +70,7 @@ Built with **FastAPI + React** on top of a **35M+ MyAnimeList ratings** dataset 
 ### 1. Clone & Data
 
 ```bash
-git clone https://github.com/your-username/ML_rec_system.git
+git clone https://github.com/Dawit-Bonga/Anime_Recommendation_System.git
 cd ML_rec_system
 ```
 
@@ -300,6 +300,7 @@ Get recommendations based on **multiple** anime IDs (the My List watchlist).
 
 ---
 
+<!--
 ## 📄 License
 
-Choose and state a license here (e.g., MIT, Apache 2.0) depending on how you want others to use this project.
+Choose and state a license here (e.g., MIT, Apache 2.0) depending on how you want others to use this project. -->
