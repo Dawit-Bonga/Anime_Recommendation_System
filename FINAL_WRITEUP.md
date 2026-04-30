@@ -6,6 +6,8 @@ This project is an automated decision system for anime recommendation. Given one
 
 Hosted web demo: https://anime-recommendation-system-flax.vercel.app/
 
+Final project source branch: https://github.com/Dawit-Bonga/Anime_Recommendation_System/tree/final-project-ready
+
 The project fits CS 4580/5580 because it combines machine learning with explicit decision logic and produces explanations for its recommendations instead of returning only black-box scores.
 
 ## Automated Decision

@@ -4,6 +4,8 @@ Anime recommendation app with a FastAPI backend and React frontend.
 
 Hosted demo: https://anime-recommendation-system-flax.vercel.app/
 
+Final project source branch: https://github.com/Dawit-Bonga/Anime_Recommendation_System/tree/final-project-ready
+
 ## What it does
 
 - Search anime by title (`/search`)
