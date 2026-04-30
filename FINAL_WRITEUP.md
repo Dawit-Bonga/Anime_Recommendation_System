@@ -4,6 +4,8 @@
 
 This project is an automated decision system for anime recommendation. Given one anime title or a small watchlist, the system chooses a ranked list of likely next watches and explains why each item was selected.
 
+Hosted web demo: https://anime-recommendation-system-flax.vercel.app/
+
 The project fits CS 4580/5580 because it combines machine learning with explicit decision logic and produces explanations for its recommendations instead of returning only black-box scores.
 
 ## Automated Decision
