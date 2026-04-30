@@ -72,7 +72,9 @@ Each recommendation includes a structured explanation:
 
 Example explanation:
 
-> Recommended because users with similar taste patterns tended to rate related titles similarly for Naruto, with shared genre signals including Action and Adventure.
+> You picked Naruto, which signals interest in Action and Adventure. This recommendation shares those signals and has a strong match strength of 98%.
+
+The system also prints factor-level evidence, such as the input titles used for personalization, overlapping genres, the model score, and filtering rules that removed same-franchise sequels.
 
 This makes the system interpretable at the level expected by the course: the user can see both the machine-learning signal and the symbolic decision logic.
 

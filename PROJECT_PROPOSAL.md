@@ -84,7 +84,7 @@ For a query such as `Naruto`, the system should return recommendations like:
 
 Example explanation:
 
-`Recommended because users who liked Naruto also liked this title, it shares Action and Adventure genre signals, and lower-ranked sequel-heavy candidates were filtered out.`
+`You picked Naruto, which signals interest in Action and Adventure. This recommendation shares those signals and has a strong match strength of 98%. The system also reports the model score, shared genres, and filtering rules that removed same-franchise sequels.`
 
 ## Evaluation
 
@@ -118,4 +118,3 @@ To reduce risk, the required submission path will avoid dependence on the fronte
 - Implementation: add explanation layer and Python-only demo path
 - Testing: verify local and Zoo-compatible execution
 - Final submission: write-up, screenshots if useful, and cleaned code
-

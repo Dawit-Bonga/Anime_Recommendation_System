@@ -146,7 +146,14 @@ Recommendation objects include explanation fields:
   "filters_applied": ["removed the original title and same-franchise sequels"],
   "evidence": ["SVD item-vector cosine similarity score: 0.980"],
   "explanation": {
-    "summary": "Recommended because users with similar taste patterns tended to rate related titles similarly."
+    "summary": "You picked Naruto, which signals interest in Action and Adventure. This recommendation shares those signals and has a strong match strength of 98%.",
+    "confidence_label": "Strong",
+    "confidence_percent": 98,
+    "factors": [
+      "The recommendation is personalized from your input: Naruto.",
+      "This title overlaps with your input on Action and Adventure, so it matches visible content signals as well as the model score.",
+      "Strong match: 98% similarity signal from Collaborative filtering (SVD)."
+    ]
   }
 }
 ```
