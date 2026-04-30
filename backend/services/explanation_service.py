@@ -47,6 +47,17 @@ def format_title_list(titles):
     return f"{', '.join(titles[:-1])}, and {titles[-1]}"
 
 
+def score_to_confidence(score):
+    percent = round(max(0.0, min(float(score), 1.0)) * 100)
+    if percent >= 80:
+        label = "Strong"
+    elif percent >= 60:
+        label = "Moderate"
+    else:
+        label = "Exploratory"
+    return percent, label
+
+
 def build_recommendation_record(
     rec_id,
     rec_meta,
@@ -63,6 +74,7 @@ def build_recommendation_record(
     shared_genres = get_shared_genres(input_metas, rec_meta)
     title = rec_meta.get("title", f"Anime #{rec_id}")
     score = float(score)
+    confidence_percent, confidence_label = score_to_confidence(score)
 
     method_labels = {
         "collaborative": "Collaborative filtering (SVD)",
@@ -88,11 +100,43 @@ def build_recommendation_record(
 
     display_titles = source_titles[:2]
     source_text = format_title_list(display_titles)
+    genre_text = ", ".join(shared_genres[:3]) if shared_genres else "latent taste patterns"
+    full_source_text = format_title_list(source_titles[:3])
 
     if shared_genres:
-        summary = f"Fans of {source_text} also tend to enjoy this. Genres in common: {', '.join(shared_genres[:3])}."
+        summary = (
+            f"You picked {source_text}, which signals interest in {genre_text}. "
+            f"This recommendation shares those signals and has a "
+            f"{confidence_label.lower()} match strength of {confidence_percent}%."
+        )
+        similarity_detail = (
+            f"This title overlaps with your input on {', '.join(shared_genres[:5])}, "
+            "so it matches visible content signals as well as the model score."
+        )
     else:
-        summary = f"Fans of {source_text} also tend to enjoy this."
+        summary = (
+            f"You picked {source_text}. This recommendation is connected through similar "
+            f"user taste patterns and has a {confidence_label.lower()} match "
+            f"strength of {confidence_percent}%."
+        )
+        similarity_detail = (
+            "The match is based mainly on collaborative-filtering patterns rather than direct genre overlap."
+        )
+
+    personalization_detail = (
+        f"The recommendation is personalized from your input: {full_source_text}."
+    )
+    confidence_detail = (
+        f"{confidence_label} match: {confidence_percent}% similarity signal from "
+        f"{method_labels.get(method, method)}."
+    )
+    factor_bullets = [
+        personalization_detail,
+        similarity_detail,
+        confidence_detail,
+    ]
+    if filters_applied:
+        factor_bullets.append(f"Decision rules applied: {', '.join(filters_applied[:2])}.")
 
     return {
         "id": int(rec_id),
@@ -107,6 +151,12 @@ def build_recommendation_record(
         "evidence": evidence,
         "explanation": {
             "summary": summary,
+            "personalization": personalization_detail,
+            "similarity": similarity_detail,
+            "confidence": confidence_detail,
+            "confidence_percent": confidence_percent,
+            "confidence_label": confidence_label,
+            "factors": factor_bullets,
             "source_titles": source_titles[:5],
         },
     }

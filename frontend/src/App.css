@@ -392,15 +392,34 @@ button:disabled {
   background: rgba(8, 20, 43, 0.72);
 }
 
+.explanation-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.42rem;
+}
+
 .method-badge {
   display: inline-flex;
   width: fit-content;
-  margin-bottom: 0.42rem;
   border-radius: 999px;
   padding: 4px 9px;
   background: rgba(77, 246, 200, 0.13);
   border: 1px solid rgba(77, 246, 200, 0.32);
   color: #9ffdea;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.confidence-badge {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 4px 9px;
+  background: rgba(0, 225, 255, 0.12);
+  border: 1px solid rgba(0, 225, 255, 0.3);
+  color: #b8f5ff;
   font-size: 0.72rem;
   font-weight: 800;
 }
@@ -414,6 +433,18 @@ button:disabled {
 
 .why-text strong {
   color: #ffffff;
+}
+
+.factor-list {
+  margin: 0.55rem 0 0;
+  padding-left: 1rem;
+  color: #b8c8ee;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.factor-list li + li {
+  margin-top: 0.28rem;
 }
 
 .shared-genres {

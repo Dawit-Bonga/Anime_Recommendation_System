@@ -126,6 +126,8 @@ def print_trace(title, response):
         print(f"{rank}. {rec.get('title')} ({rec.get('method_label', rec.get('method'))})")
         print(f"   Score: {rec.get('score', 0):.3f}")
         print(f"   Why: {explanation.get('summary', 'No explanation available.')}")
+        for factor in explanation.get("factors", [])[:4]:
+            print(f"   - {factor}")
         print(f"   Shared genres: {', '.join(shared_genres) if shared_genres else 'None'}")
         print(f"   Rules: {', '.join(filters) if filters else 'None'}")
         print()

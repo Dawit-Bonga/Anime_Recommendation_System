@@ -27,6 +27,44 @@ const EmptyState = ({ message, icon = null }) => (
   </div>
 )
 
+const ExplanationPanel = ({ rec }) => {
+  const factors = rec.explanation?.factors || []
+
+  return (
+    <div className="explanation-panel">
+      <div className="explanation-header">
+        <div className="method-badge">
+          {rec.method_label || rec.method || 'Recommendation'}
+        </div>
+        {rec.explanation?.confidence_label && (
+          <div className="confidence-badge">
+            {rec.explanation.confidence_label} · {rec.explanation.confidence_percent}%
+          </div>
+        )}
+      </div>
+      {rec.explanation?.summary && (
+        <p className="why-text">
+          <strong>Why this?</strong> {rec.explanation.summary}
+        </p>
+      )}
+      {factors.length > 0 && (
+        <ul className="factor-list">
+          {factors.slice(0, 4).map((factor) => (
+            <li key={factor}>{factor}</li>
+          ))}
+        </ul>
+      )}
+      {rec.shared_genres?.length > 0 && (
+        <div className="shared-genres">
+          {rec.shared_genres.slice(0, 4).map((genre) => (
+            <span key={genre}>{genre}</span>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function App() {
   const [query, setQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
@@ -540,23 +578,7 @@ function App() {
                         </div>
                       )}
                       {rec.genre && <p className="genre">{rec.genre}</p>}
-                      <div className="explanation-panel">
-                        <div className="method-badge">
-                          {rec.method_label || rec.method || 'Recommendation'}
-                        </div>
-                        {rec.explanation?.summary && (
-                          <p className="why-text">
-                            <strong>Why this?</strong> {rec.explanation.summary}
-                          </p>
-                        )}
-                        {rec.shared_genres?.length > 0 && (
-                          <div className="shared-genres">
-                            {rec.shared_genres.slice(0, 4).map((genre) => (
-                              <span key={genre}>{genre}</span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                      <ExplanationPanel rec={rec} />
                       {rec.description && (
                         <p className="description">
                           {rec.description.length > 150 
@@ -622,23 +644,7 @@ function App() {
                         </div>
                       )}
                       {rec.genre && <p className="genre">{rec.genre}</p>}
-                      <div className="explanation-panel">
-                        <div className="method-badge">
-                          {rec.method_label || rec.method || 'Recommendation'}
-                        </div>
-                        {rec.explanation?.summary && (
-                          <p className="why-text">
-                            <strong>Why this?</strong> {rec.explanation.summary}
-                          </p>
-                        )}
-                        {rec.shared_genres?.length > 0 && (
-                          <div className="shared-genres">
-                            {rec.shared_genres.slice(0, 4).map((genre) => (
-                              <span key={genre}>{genre}</span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                      <ExplanationPanel rec={rec} />
                       {rec.description && (
                         <p className="description">
                           {rec.description.length > 150 
