@@ -5,6 +5,7 @@ from collections import defaultdict
 
 from utils.title_normalizer import normalize_title
 from services.content_based_service import recommend_content_based
+from services.explanation_service import build_recommendation_record
 
 def recommend_collaborative(anime_id: int, objects: dict, limit: int = 10):
     """
@@ -29,8 +30,11 @@ def recommend_collaborative(anime_id: int, objects: dict, limit: int = 10):
     # 3. Get Top 50 candidates (We fetch more so we can throw away sequels)
     top_indices = scores.argsort()[::-1][:50]
     
-    recommendations = []
     seen_base_titles = {}
+    filters_applied = [
+        "removed the original title and same-franchise sequels",
+        "deduplicated franchise seasons so one franchise does not dominate the list",
+    ]
     
     for i in top_indices:
         rec_id = objects['idx_to_anime_id'][i]
@@ -53,22 +57,27 @@ def recommend_collaborative(anime_id: int, objects: dict, limit: int = 10):
         
         if rec_base_title in seen_base_titles:
             if score > seen_base_titles[rec_base_title][0]:
-                seen_base_titles[rec_base_title] = (score, {
-                    "id": int(rec_id),
-                    "title": meta.get('title', f"Anime #{rec_id}"),
-                    "genre": meta.get('genre', 'Unknown'),
-                    "score": score,
-                    "img_url": None
-                })
+                seen_base_titles[rec_base_title] = (
+                    score,
+                    build_recommendation_record(
+                        rec_id,
+                        meta,
+                        score,
+                        "collaborative",
+                        [input_meta],
+                        filters_applied,
+                    ),
+                )
             continue
         else:
-            rec_data = {
-                "id": int(rec_id),
-                "title": meta.get('title', f"Anime #{rec_id}"),
-                "genre": meta.get('genre', 'Unknown'),
-                "score": score,
-                "img_url": None
-            }
+            rec_data = build_recommendation_record(
+                rec_id,
+                meta,
+                score,
+                "collaborative",
+                [input_meta],
+                filters_applied,
+            )
             seen_base_titles[rec_base_title] = (score, rec_data)
     
     # Convert to list and sort by score
@@ -106,11 +115,13 @@ def recommend_batch(anime_ids: List[int], objects: dict, limit: int = 20):
     # Track which animes are in the input list (to exclude them)
     input_anime_ids = set(anime_ids)
     input_base_titles = set()
+    input_metas = []
     
     # Get base titles of input animes (to filter sequels)
     for anime_id in anime_ids:
         if anime_id in objects.get("metadata", {}):
             meta = objects['metadata'][anime_id]
+            input_metas.append(meta)
             title = meta.get('title', "").lower()
             input_base_titles.add(normalize_title(title))
     
@@ -144,8 +155,12 @@ def recommend_batch(anime_ids: List[int], objects: dict, limit: int = 20):
     sorted_recs = sorted(aggregated_scores.items(), key=lambda x: x[1], reverse=True)[:100]
     
     # Filter and deduplicate
-    recommendations = []
     seen_base_titles = {}
+    filters_applied = [
+        "excluded anime already in the watchlist",
+        "removed same-franchise sequels of watchlist items",
+        "deduplicated franchise seasons so one franchise does not dominate the list",
+    ]
     
     for rec_id, score in sorted_recs:
         meta = objects['metadata'].get(rec_id, {})
@@ -159,22 +174,27 @@ def recommend_batch(anime_ids: List[int], objects: dict, limit: int = 20):
         # Deduplicate franchises
         if rec_base_title in seen_base_titles:
             if score > seen_base_titles[rec_base_title][0]:
-                seen_base_titles[rec_base_title] = (score, {
-                    "id": int(rec_id),
-                    "title": meta.get('title', f"Anime #{rec_id}"),
-                    "genre": meta.get('genre', 'Unknown'),
-                    "score": score,
-                    "img_url": None
-                })
+                seen_base_titles[rec_base_title] = (
+                    score,
+                    build_recommendation_record(
+                        rec_id,
+                        meta,
+                        score,
+                        "batch_collaborative",
+                        input_metas,
+                        filters_applied,
+                    ),
+                )
             continue
         else:
-            rec_data = {
-                "id": int(rec_id),
-                "title": meta.get('title', f"Anime #{rec_id}"),
-                "genre": meta.get('genre', 'Unknown'),
-                "score": score,
-                "img_url": None
-            }
+            rec_data = build_recommendation_record(
+                rec_id,
+                meta,
+                score,
+                "batch_collaborative",
+                input_metas,
+                filters_applied,
+            )
             seen_base_titles[rec_base_title] = (score, rec_data)
     
     # Convert to list and sort

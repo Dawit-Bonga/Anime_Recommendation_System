@@ -2,6 +2,7 @@ from fastapi import HTTPException
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity as tfidf_cosine_similarity
 from utils.title_normalizer import normalize_title
+from services.explanation_service import build_recommendation_record
 
 def build_tfidf_index(metadata):
     """
@@ -58,8 +59,12 @@ def recommend_content_based(anime_id: int, objects: dict, limit: int = 10):
     # Get top candidates
     top_indices = similarities.argsort()[::-1][:50]
     
-    recommendations = []
     seen_base_titles = {}
+    filters_applied = [
+        "removed the original title and same-franchise sequels",
+        "deduplicated franchise seasons so one franchise does not dominate the list",
+        "used content-based fallback because the title was unavailable in the SVD model",
+    ]
     
     for i in top_indices:
         rec_id = objects['tfidf_anime_ids'][i]
@@ -82,22 +87,27 @@ def recommend_content_based(anime_id: int, objects: dict, limit: int = 10):
         
         if rec_base_title in seen_base_titles:
             if score > seen_base_titles[rec_base_title][0]:
-                seen_base_titles[rec_base_title] = (score, {
-                    "id": int(rec_id),
-                    "title": meta.get('title', f"Anime #{rec_id}"),
-                    "genre": meta.get('genre', 'Unknown'),
-                    "score": score,
-                    "img_url": None
-                })
+                seen_base_titles[rec_base_title] = (
+                    score,
+                    build_recommendation_record(
+                        rec_id,
+                        meta,
+                        score,
+                        "content_based",
+                        [input_meta],
+                        filters_applied,
+                    ),
+                )
             continue
         else:
-            rec_data = {
-                "id": int(rec_id),
-                "title": meta.get('title', f"Anime #{rec_id}"),
-                "genre": meta.get('genre', 'Unknown'),
-                "score": score,
-                "img_url": None
-            }
+            rec_data = build_recommendation_record(
+                rec_id,
+                meta,
+                score,
+                "content_based",
+                [input_meta],
+                filters_applied,
+            )
             seen_base_titles[rec_base_title] = (score, rec_data)
     
     # Convert to list and sort by score

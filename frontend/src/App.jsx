@@ -20,9 +20,9 @@ const SkeletonCard = () => (
 )
 
 // Empty State Component
-const EmptyState = ({ message, icon = '🎌' }) => (
+const EmptyState = ({ message, icon = null }) => (
   <div className="empty-state">
-    <div className="empty-icon">{icon}</div>
+    {icon ? <div className="empty-icon">{icon}</div> : null}
     <p className="empty-message">{message}</p>
   </div>
 )
@@ -353,8 +353,33 @@ function App() {
     <div className="app-container">
       {/* HEADER */}
       <header>
-        <h1>🎌 Anime Recommender</h1>
-        <p>Powered by Machine Learning (SVD)</p>
+        <div className="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 100 100" role="presentation">
+            <defs>
+              <linearGradient id="nodeLine" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#00e1ff" />
+                <stop offset="50%" stopColor="#8f6bff" />
+                <stop offset="100%" stopColor="#4df6c8" />
+              </linearGradient>
+            </defs>
+            <g fill="none" stroke="url(#nodeLine)" strokeWidth="3.3" strokeLinecap="round">
+              <path d="M21 30 L50 18 L78 32 L79 68 L50 82 L22 68 Z" />
+              <path d="M22 30 L79 68" />
+              <path d="M78 32 L22 68" />
+              <path d="M50 18 L50 82" />
+            </g>
+            <g fill="#def7ff">
+              <circle cx="21" cy="30" r="4.2" />
+              <circle cx="50" cy="18" r="4.2" />
+              <circle cx="78" cy="32" r="4.2" />
+              <circle cx="79" cy="68" r="4.2" />
+              <circle cx="50" cy="82" r="4.2" />
+              <circle cx="22" cy="68" r="4.2" />
+            </g>
+          </svg>
+        </div>
+        <h1>Find Your Next Watch</h1>
+        <p>Tell us an anime you love, and we'll find your next favorite.</p>
         <p className="keyboard-hint">Press <kbd>Esc</kbd> to clear • Press <kbd>Enter</kbd> to search</p>
       </header>
 
@@ -427,8 +452,7 @@ function App() {
       {/* EMPTY STATE - No search results */}
       {!loading && !searchResults.length && !recommendations.length && query && (
         <EmptyState 
-          message="No results found. Try searching for a different anime!" 
-          icon="🔍"
+          message="No results found. Try searching for a different anime!"
         />
       )}
 
@@ -500,7 +524,7 @@ function App() {
                           e.target.style.display = 'none';
                         }} />
                       ) : (
-                        <div className="image-placeholder">🎌</div>
+                        <div className="image-placeholder">▶</div>
                       )}
                       <div className="match-score">
                         {(rec.score * 100).toFixed(1)}% Match
@@ -516,6 +540,23 @@ function App() {
                         </div>
                       )}
                       {rec.genre && <p className="genre">{rec.genre}</p>}
+                      <div className="explanation-panel">
+                        <div className="method-badge">
+                          {rec.method_label || rec.method || 'Recommendation'}
+                        </div>
+                        {rec.explanation?.summary && (
+                          <p className="why-text">
+                            <strong>Why this?</strong> {rec.explanation.summary}
+                          </p>
+                        )}
+                        {rec.shared_genres?.length > 0 && (
+                          <div className="shared-genres">
+                            {rec.shared_genres.slice(0, 4).map((genre) => (
+                              <span key={genre}>{genre}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                       {rec.description && (
                         <p className="description">
                           {rec.description.length > 150 
@@ -565,7 +606,7 @@ function App() {
                           e.target.style.display = 'none';
                         }} />
                       ) : (
-                        <div className="image-placeholder">🎌</div>
+                        <div className="image-placeholder">▶</div>
                       )}
                       <div className="match-score">
                         {(rec.score * 100).toFixed(1)}% Match
@@ -581,6 +622,23 @@ function App() {
                         </div>
                       )}
                       {rec.genre && <p className="genre">{rec.genre}</p>}
+                      <div className="explanation-panel">
+                        <div className="method-badge">
+                          {rec.method_label || rec.method || 'Recommendation'}
+                        </div>
+                        {rec.explanation?.summary && (
+                          <p className="why-text">
+                            <strong>Why this?</strong> {rec.explanation.summary}
+                          </p>
+                        )}
+                        {rec.shared_genres?.length > 0 && (
+                          <div className="shared-genres">
+                            {rec.shared_genres.slice(0, 4).map((genre) => (
+                              <span key={genre}>{genre}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                       {rec.description && (
                         <p className="description">
                           {rec.description.length > 150 
@@ -627,10 +685,9 @@ function App() {
       {!loading && !searchResults.length && !recommendations.length && !query && !selectedAnime && (
         <div className="welcome-section">
           <EmptyState 
-            message="Search for an anime to get personalized recommendations powered by machine learning!" 
-            icon="🎌"
+            message="Search for an anime you love and get a list of shows you'll want to watch next."
           />
-          <p className="welcome-hint">💡 Try searching for popular anime like "Naruto", "One Piece", or "Attack on Titan"</p>
+          <p className="welcome-hint">Try searching for popular anime like "Naruto", "One Piece", or "Attack on Titan"</p>
         </div>
       )}
     </div>

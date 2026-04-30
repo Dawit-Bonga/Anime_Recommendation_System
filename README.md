@@ -7,12 +7,14 @@ Anime recommendation app with a FastAPI backend and React frontend.
 - Search anime by title (`/search`)
 - Get recommendations from one anime (`/recommend/{anime_id}`)
 - Build a watchlist and get combined recommendations (`/recommend/batch`)
+- Explain each recommendation with method, score, shared genre signals, and rule-based filtering notes
 
 ## Tech
 
 - Frontend: React + Vite
 - Backend: FastAPI
 - Recommenders: SVD collaborative filtering + TF-IDF content-based fallback
+- Explainability: structured decision traces added to each recommendation
 
 ## Requirements
 
@@ -42,6 +44,17 @@ uvicorn main:app --reload
 ```
 
 Backend runs at `http://127.0.0.1:8000`.
+
+Python-only decision trace demo:
+
+```bash
+cd backend
+python3 demo_decision_trace.py --query "Naruto"
+python3 demo_decision_trace.py --ids 20 5114 11061
+python3 demo_decision_trace.py --sample --query "Naruto"
+```
+
+Use `--sample` for a small Zoo-friendly run that does not depend on the large local dataset/model.
 
 3. Set up frontend
 
@@ -86,6 +99,24 @@ Body:
 
 Returns recommendations based on multiple anime IDs.
 
+Recommendation objects include explanation fields:
+
+```json
+{
+  "id": 21,
+  "title": "One Piece",
+  "score": 0.98,
+  "method": "collaborative",
+  "method_label": "Collaborative filtering (SVD)",
+  "shared_genres": ["Action", "Adventure"],
+  "filters_applied": ["removed the original title and same-franchise sequels"],
+  "evidence": ["SVD item-vector cosine similarity score: 0.980"],
+  "explanation": {
+    "summary": "Recommended because users with similar taste patterns tended to rate related titles similarly."
+  }
+}
+```
+
 Interactive docs: `http://127.0.0.1:8000/docs`
 
 ## Project layout
@@ -94,10 +125,13 @@ Interactive docs: `http://127.0.0.1:8000/docs`
 backend/
   main.py
   train_model.py
+  demo_decision_trace.py
   services/
   utils/
 frontend/
   src/
+FINAL_WRITEUP.md
+zoo_submission/  # ignored local upload bundle
 requirements.txt
 ```
 
@@ -105,3 +139,4 @@ requirements.txt
 
 - First-time model training can take a while depending on dataset size.
 - Large dataset files are not committed to Git.
+- `zoo_submission/` is intentionally ignored by Git and is used as a local upload bundle for the course submission.
