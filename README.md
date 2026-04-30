@@ -73,6 +73,40 @@ Optional backend URL override:
 VITE_API_URL=http://127.0.0.1:8000
 ```
 
+## Render deployment with Hugging Face assets
+
+The repository does not commit the large model/data files. For hosted deployment, upload these files to a Hugging Face model repository:
+
+```text
+svd_model.pkl
+myanilist.csv
+```
+
+Then set these Render environment variables on the backend service:
+
+```text
+HF_REPO_ID=DawitBonga/myanilist-recommender
+HF_TOKEN=your_hugging_face_token_if_the_repo_is_private
+```
+
+Build command:
+
+```bash
+pip install -r requirements.txt && python backend/download_assets.py
+```
+
+Start command:
+
+```bash
+cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
+```
+
+For the frontend deployment, set:
+
+```text
+VITE_API_URL=https://your-render-backend-url.onrender.com
+```
+
 ## API (minimal)
 
 ### `GET /search?query=<name>&limit=5`
