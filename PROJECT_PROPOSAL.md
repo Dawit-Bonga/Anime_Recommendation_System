@@ -19,7 +19,7 @@ The decision problem is:
 - given one anime or a small set of anime
 - choose a ranked list of likely good next watches
 - explain why those titles were chosen over other candidates
-
+s
 ## Approach
 
 The system uses a hybrid recommendation pipeline:
